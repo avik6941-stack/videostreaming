@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create account | Video Platform</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { max-width: 480px; margin: 0 auto; padding: 48px 20px; background: #101217; color: #f3f4f6; }
+    form { padding: 24px; border: 1px solid #30343d; border-radius: 10px; background: #181b22; }
+    label { display: block; margin: 14px 0 6px; color: #b9c0cc; }
+    input, button { box-sizing: border-box; width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #454b57; font: inherit; }
+    input { background: #111318; color: #fff; }
+    select { background: #111318; color: #fff; }
+    .phone { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
+    button { margin-top: 20px; border: 0; background: #36a269; color: #fff; cursor: pointer; font-weight: 700; }
+    #status { min-height: 24px; margin-top: 16px; color: #a8e6c2; }
+    .error { color: #ff9d9d !important; }
+    a { color: #8ed7ff; }
+  </style>
+</head>
+<body>
+  <h1>Create account</h1>
+  <p>Register with your email and password.</p>
+  <form id="register-form">
+    <label for="name">Name</label>
+    <input id="name" name="name" required>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" minlength="6" required>
+    <label for="date-of-birth">Date of birth</label>
+    <input id="date-of-birth" name="dateOfBirth" type="date" required>
+    <label for="sex">Sex</label>
+    <select id="sex" name="sex" required>
+      <option value="">Select</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+      <option value="prefer_not_to_say">Prefer not to say</option>
+    </select>
+    <button type="submit">Create account</button>
+    <div id="status" role="status"></div>
+  </form>
+  <p>Already registered? <a href="/login">Login</a></p>
+  <script>
+    const form = document.querySelector("#register-form");
+    const status = document.querySelector("#status");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.className = "";
+      status.textContent = "Creating account...";
+      try {
+        const values = Object.fromEntries(new FormData(form));
+        const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Registration failed");
+        window.location.href = "/login?registered=1";
+      } catch (error) { status.className = "error"; status.textContent = error.message; }
+    });
+  </script>
+</body>
+</html>

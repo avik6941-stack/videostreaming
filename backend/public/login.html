@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | Video Platform</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { max-width: 480px; margin: 0 auto; padding: 48px 20px; background: #101217; color: #f3f4f6; }
+    form { padding: 24px; border: 1px solid #30343d; border-radius: 10px; background: #181b22; }
+    label { display: block; margin: 14px 0 6px; color: #b9c0cc; }
+    input, button { box-sizing: border-box; width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #454b57; font: inherit; }
+    input { background: #111318; color: #fff; }
+    button { margin-top: 20px; border: 0; background: #36a269; color: #fff; cursor: pointer; font-weight: 700; }
+    #status { min-height: 24px; margin-top: 16px; color: #a8e6c2; }
+    .error { color: #ff9d9d !important; }
+    a { color: #8ed7ff; }
+  </style>
+</head>
+<body>
+  <h1>Login</h1>
+  <p>Login with your email and password.</p>
+  <form id="login-form">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required>
+    <button type="submit">Login</button>
+    <div id="status" role="status"></div>
+  </form>
+  <p>New user? <a href="/register">Create an account</a></p>
+  <script>
+    const form = document.querySelector("#login-form");
+    const status = document.querySelector("#status");
+    if (new URLSearchParams(window.location.search).get("registered") === "1") {
+      status.textContent = "Registration successful. Please login.";
+    }
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.className = "";
+      status.textContent = "Logging in...";
+      try {
+        const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Login failed");
+        localStorage.setItem("videoPlatformToken", result.token);
+        localStorage.setItem("videoPlatformUser", JSON.stringify(result.user));
+        window.location.href = "/";
+      } catch (error) { status.className = "error"; status.textContent = error.message; }
+    });
+  </script>
+</body>
+</html>

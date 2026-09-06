@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home | Video Platform</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    [hidden] { display: none !important; }
+    body { max-width: 900px; margin: 0 auto; padding: 32px 20px; background: #101217; color: #f3f4f6; }
+    header { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; background: #101217; }
+    nav { display: flex; align-items: center; gap: 8px; }
+    .menu-button { display: block; width: 48px; height: 42px; padding: 8px; }
+    .menu-icon, .menu-icon::before, .menu-icon::after { display: block; height: 3px; border-radius: 2px; background: #fff; content: ""; }
+    .menu-icon::before { transform: translateY(-8px); }
+    .menu-icon::after { transform: translateY(5px); }
+    form, article { padding: 20px; border: 1px solid #30343d; border-radius: 10px; background: #181b22; }
+    form { margin-top: 24px; }
+    #videos { display: grid; gap: 28px; }
+    article { margin: 0; }
+    label { display: block; margin: 14px 0 6px; color: #b9c0cc; }
+    input, button { box-sizing: border-box; width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #454b57; font: inherit; }
+    input { background: #111318; color: #fff; }
+    button { margin-top: 18px; border: 0; background: #36a269; color: #fff; cursor: pointer; font-weight: 700; }
+    header button { width: auto; margin: 0; background: #454b57; }
+    .profile-actions { display: flex; gap: 8px; }
+    #profile-form { position: fixed; z-index: 10; top: 50%; left: 50%; width: min(420px, calc(100% - 40px)); max-height: calc(100vh - 40px); box-sizing: border-box; margin: 0; overflow-y: auto; transform: translate(-50%, calc(-50% - 16px)); opacity: 0; visibility: hidden; transition: transform .25s ease, opacity .25s ease, visibility .25s ease; }
+    #profile-form.open { transform: translate(-50%, -50%); opacity: 1; visibility: visible; }
+    header { position: sticky; }
+    #guest-links, #user-links { position: absolute; top: 52px; right: 0; display: none; flex-direction: column; align-items: stretch; padding: 10px; border: 1px solid #30343d; border-radius: 8px; background: #181b22; }
+    #guest-links.menu-open, #user-links.menu-open { display: flex; }
+    #guest-links a, #user-links button { min-width: 110px; text-align: center; }
+    #category-menu { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; padding: 12px; border: 1px solid #30343d; border-radius: 8px; background: #181b22; }
+    #category-menu button { width: auto; margin: 0; padding: 8px 12px; }
+    nav a { display: inline-block; padding: 10px 12px; border-radius: 6px; color: #fff; background: #36a269; text-decoration: none; }
+    nav a.login { background: #454b57; }
+    button:disabled { opacity: .6; cursor: wait; }
+    video { display: block; width: 100%; aspect-ratio: 16 / 9; margin-top: 14px; border-radius: 6px; background: #000; object-fit: contain; }
+    .youtube-link { display: flex; position: relative; align-items: center; justify-content: center; aspect-ratio: 16 / 9; margin-top: 14px; border-radius: 6px; background: #000 center / cover no-repeat; color: #fff; text-decoration: none; }
+    .youtube-link span { padding: 12px 18px; border-radius: 6px; background: #d92323; font-weight: 700; }
+    #status, #youtube-status { min-height: 24px; margin-top: 14px; color: #a8e6c2; }
+    .error { color: #ff9d9d !important; }
+    .details { color: #b9c0cc; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Video Platform</h1>
+    <button id="menu-button" class="menu-button" type="button" aria-label="Open menu" aria-expanded="false"><span class="menu-icon"></span></button>
+    <nav id="guest-links"><a href="/register">Register</a><a class="login" href="/login">Login</a><a href="/login">Upload videos</a><a class="login" href="/login">Add video link</a></nav>
+    <nav id="user-links" class="profile-actions" hidden><button id="home-button" type="button">Home</button><button id="categories-button" type="button">Categories</button><button id="upload-menu-button" type="button">Upload videos</button><button id="youtube-menu-button" type="button">Add video link</button><button id="profile-button" type="button">Profile</button><button id="logout" type="button">Logout</button></nav>
+  </header>
+  <div id="category-menu" hidden>
+    <button type="button" data-category="all">All categories</button>
+    <button type="button" data-category="general">General</button>
+    <button type="button" data-category="education">Education</button>
+    <button type="button" data-category="music">Music</button>
+    <button type="button" data-category="gaming">Gaming</button>
+    <button type="button" data-category="news">News</button>
+    <button type="button" data-category="entertainment">Entertainment</button>
+  </div>
+  <form id="profile-form">
+    <h2>Edit profile</h2>
+    <label for="profile-name">Name</label>
+    <input id="profile-name" type="text" readonly>
+    <label for="profile-email">Email</label>
+    <input id="profile-email" type="email" readonly>
+    <label for="profile-phone">Mobile number</label>
+    <div class="phone-input">
+      <select id="profile-country-code" aria-label="Profile country code">
+        <option value="+91">India (+91)</option>
+        <option value="+1">United States (+1)</option>
+        <option value="+44">United Kingdom (+44)</option>
+        <option value="+61">Australia (+61)</option>
+        <option value="+971">UAE (+971)</option>
+      </select>
+      <input id="profile-phone" name="phoneNumber" type="tel" placeholder="9876543210">
+    </div>
+    <label for="profile-dob">Date of birth</label>
+    <input id="profile-dob" name="dateOfBirth" type="date" required>
+    <label for="profile-sex">Sex</label>
+    <select id="profile-sex" name="sex" required>
+      <option value="">Select</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+      <option value="prefer_not_to_say">Prefer not to say</option>
+    </select>
+    <button type="submit">Save profile</button>
+    <div id="profile-status" role="status"></div>
+  </form>
+  <form id="upload-form" hidden>
+    <h2>Upload video</h2>
+    <label for="title">Title</label>
+    <input id="title" name="title" placeholder="My video" required>
+    <label for="video">Video file</label>
+    <input id="video" name="video" type="file" accept="video/*" required>
+    <label for="video-category">Category</label>
+    <select id="video-category" name="category">
+      <option value="general">General</option><option value="education">Education</option><option value="music">Music</option><option value="gaming">Gaming</option><option value="news">News</option><option value="entertainment">Entertainment</option>
+    </select>
+    <button id="upload-button" type="submit">Upload video</button>
+    <div id="status" role="status"></div>
+  </form>
+  <form id="youtube-form" hidden>
+    <h2>Add video link</h2>
+    <label for="youtube-title">Video name</label>
+    <input id="youtube-title" name="title" placeholder="Video name" required>
+    <label for="youtube-url">Video link</label>
+    <input id="youtube-url" name="videoUrl" type="url" placeholder="https://example.com/video" required>
+    <label for="youtube-category">Category</label>
+    <select id="youtube-category" name="category">
+      <option value="general">General</option><option value="education">Education</option><option value="music">Music</option><option value="gaming">Gaming</option><option value="news">News</option><option value="entertainment">Entertainment</option>
+    </select>
+    <button id="youtube-button" type="submit">Add video link</button>
+    <div id="youtube-status" role="status"></div>
+  </form>
+  <section id="video-content"><h2>All uploaded videos</h2><div id="videos">Loading...</div></section>
+  <script>
+    const tokenKey = "videoPlatformToken";
+    const token = localStorage.getItem(tokenKey);
+    let user = JSON.parse(localStorage.getItem("videoPlatformUser") || "null");
+    const uploadForm = document.querySelector("#upload-form");
+    const youtubeForm = document.querySelector("#youtube-form");
+    const profileForm = document.querySelector("#profile-form");
+    const menuButton = document.querySelector("#menu-button");
+    const videoContent = document.querySelector("#video-content");
+    const categoryMenu = document.querySelector("#category-menu");
+    let selectedCategory = "all";
+    document.querySelector("#guest-links").hidden = Boolean(token);
+    document.querySelector("#user-links").hidden = !token;
+    uploadForm.hidden = true;
+    youtubeForm.hidden = true;
+    const navigation = token ? document.querySelector("#user-links") : document.querySelector("#guest-links");
+    menuButton.addEventListener("click", () => {
+      const open = navigation.classList.toggle("menu-open");
+      menuButton.setAttribute("aria-expanded", String(open));
+    });
+    function fillProfile(profile) {
+      if (!profile) return;
+      user = profile;
+      localStorage.setItem("videoPlatformUser", JSON.stringify(profile));
+      document.querySelector("#profile-name").value = profile.name || "";
+      document.querySelector("#profile-email").value = profile.email || "";
+      const countryCodes = ["+971", "+91", "+44", "+61", "+1"];
+      const savedCode = countryCodes.find((code) => (profile.phone || "").startsWith(code));
+      if (savedCode) {
+        document.querySelector("#profile-country-code").value = savedCode;
+        document.querySelector("#profile-phone").value = profile.phone.slice(savedCode.length);
+      } else {
+        document.querySelector("#profile-phone").value = profile.phone || "";
+      }
+      document.querySelector("#profile-dob").value = profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : "";
+      document.querySelector("#profile-sex").value = profile.sex || "";
+    }
+    fillProfile(user);
+    if (token) {
+      fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+        .then((response) => response.ok ? response.json() : null)
+        .then((result) => fillProfile(result && result.user));
+    }
+    const status = document.querySelector("#status");
+    const youtubeStatus = document.querySelector("#youtube-status");
+    const profileStatus = document.querySelector("#profile-status");
+    const videos = document.querySelector("#videos");
+    function showHomeSections(show) {
+      uploadForm.hidden = !show || !token;
+      videoContent.hidden = !show;
+    }
+    function youtubeId(value) {
+      try {
+        const url = new URL(value);
+        if (url.hostname.replace("www.", "") === "youtu.be") return url.pathname.slice(1).split("/")[0];
+        if (url.pathname === "/watch") return url.searchParams.get("v");
+        if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/embed/")) return url.pathname.split("/")[2];
+      } catch (error) { return null; }
+      return null;
+    }
+    async function loadVideos() {
+      const response = await fetch("/api/videos");
+      const items = await response.json();
+      videos.replaceChildren();
+      const filteredItems = selectedCategory === "all" ? items : items.filter((item) => (item.category || "general") === selectedCategory);
+      if (!filteredItems.length) { videos.textContent = "No videos in this category."; return; }
+      filteredItems.forEach((item) => {
+        const article = document.createElement("article");
+        const heading = document.createElement("h2");
+        heading.textContent = item.title;
+        const details = document.createElement("div");
+        details.className = "details";
+        details.textContent = `${item.category || "general"} | Uploaded ${new Date(item.uploadDate).toLocaleString()}`;
+        if (item.videoUrl || item.youtubeUrl) {
+          const player = document.createElement("a");
+          const originalUrl = item.videoUrl || item.youtubeUrl;
+          const id = youtubeId(originalUrl);
+          player.className = "youtube-link";
+          player.href = originalUrl;
+          player.target = "_blank";
+          player.rel = "noopener noreferrer";
+          if (id) player.style.backgroundImage = `url(https://img.youtube.com/vi/${id}/hqdefault.jpg)`;
+          player.innerHTML = `<span>${id ? "Play on YouTube" : "Open video link"}</span>`;
+          article.append(heading, details, player);
+        } else {
+          const player = document.createElement("video");
+          player.controls = true;
+          player.src = `/api/videos/${item._id}/stream`;
+          article.append(heading, details, player);
+        }
+        videos.append(article);
+      });
+    }
+    uploadForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.querySelector("#upload-button");
+      button.disabled = true;
+      status.className = "";
+      status.textContent = "Uploading...";
+      try {
+        const response = await fetch("/api/videos/upload", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: new FormData(event.currentTarget) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Upload failed");
+        event.currentTarget.reset();
+        status.textContent = "Upload complete.";
+        await loadVideos();
+      } catch (error) { status.className = "error"; status.textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+    document.querySelector("#categories-button").addEventListener("click", () => {
+      categoryMenu.hidden = !categoryMenu.hidden;
+      document.querySelector("#user-links").classList.remove("menu-open");
+      menuButton.setAttribute("aria-expanded", "false");
+    });
+    categoryMenu.addEventListener("click", (event) => {
+      if (!event.target.dataset.category) return;
+      selectedCategory = event.target.dataset.category;
+      categoryMenu.hidden = true;
+      loadVideos();
+    });
+    youtubeForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.querySelector("#youtube-button");
+      button.disabled = true;
+      youtubeStatus.className = "";
+      youtubeStatus.textContent = "Adding video link...";
+      try {
+        const response = await fetch("/api/videos/link", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not add video link");
+        event.currentTarget.reset();
+        youtubeStatus.textContent = "Video link added.";
+        await loadVideos();
+      } catch (error) { youtubeStatus.className = "error"; youtubeStatus.textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+    document.querySelector("#logout").addEventListener("click", () => { localStorage.removeItem(tokenKey); localStorage.removeItem("videoPlatformUser"); window.location.href = "/"; });
+    document.querySelector("#profile-button").addEventListener("click", (event) => {
+      const showingProfile = !profileForm.classList.contains("open");
+      profileForm.classList.toggle("open", showingProfile);
+      showHomeSections(!showingProfile);
+      event.currentTarget.textContent = showingProfile ? "Close profile" : "Profile";
+    });
+    document.querySelector("#home-button").addEventListener("click", () => {
+      profileForm.classList.remove("open");
+      document.querySelector("#profile-button").textContent = "Profile";
+      showHomeSections(true);
+      uploadForm.hidden = true;
+      youtubeForm.hidden = true;
+      selectedCategory = "all";
+      categoryMenu.hidden = true;
+      loadVideos();
+    });
+    document.querySelector("#upload-menu-button").addEventListener("click", () => {
+      profileForm.classList.remove("open");
+      document.querySelector("#profile-button").textContent = "Profile";
+      showHomeSections(true);
+      uploadForm.hidden = false;
+      youtubeForm.hidden = true;
+      document.querySelector("#user-links").classList.remove("menu-open");
+      menuButton.setAttribute("aria-expanded", "false");
+      uploadForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    document.querySelector("#youtube-menu-button").addEventListener("click", () => {
+      profileForm.classList.remove("open");
+      document.querySelector("#profile-button").textContent = "Profile";
+      uploadForm.hidden = true;
+      youtubeForm.hidden = false;
+      videoContent.hidden = false;
+      document.querySelector("#user-links").classList.remove("menu-open");
+      menuButton.setAttribute("aria-expanded", "false");
+      youtubeForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    profileForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      profileStatus.className = "";
+      profileStatus.textContent = "Saving profile...";
+      try {
+        const values = Object.fromEntries(new FormData(event.currentTarget));
+        const localPhone = (values.phoneNumber || "").replace(/\D/g, "");
+        values.phone = localPhone ? document.querySelector("#profile-country-code").value + localPhone : "";
+        delete values.phoneNumber;
+        const response = await fetch("/api/auth/me", { method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(values) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not save profile");
+        fillProfile(result.user);
+        window.location.href = "/";
+      } catch (error) { profileStatus.className = "error"; profileStatus.textContent = error.message; }
+    });
+    loadVideos().catch(() => { videos.textContent = "Could not load videos."; });
+  </script>
+</body>
+</html>
