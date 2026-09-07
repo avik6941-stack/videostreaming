@@ -11,7 +11,12 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
-const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/video-platform";
+const mongoUri = process.env.MONGODB_URI || (process.env.NODE_ENV === "production" ? null : "mongodb://127.0.0.1:27017/video-platform");
+
+if (!mongoUri) {
+  console.error("MongoDB is not configured. Add MONGODB_URI in the deployment environment.");
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
