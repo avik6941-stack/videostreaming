@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const videoRoutes = require("./routes/video");
 const authRoutes = require("./routes/auth");
+const statsRoutes = require("./routes/stats");
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/videos", videoRoutes);
+app.use("/api/stats", statsRoutes);
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "home.html"));

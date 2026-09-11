@@ -15,6 +15,10 @@
     header { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 0; background: rgba(11, 14, 19, .86); backdrop-filter: blur(18px); }
     header h1 { margin: 0; font: 700 1.35rem "Space Grotesk", sans-serif; letter-spacing: -.04em; }
     header h1::before { display: inline-block; width: 10px; height: 10px; margin: 0 9px 2px 0; border-radius: 50%; background: var(--accent); content: ""; box-shadow: 0 0 18px rgba(255, 77, 109, .7); }
+    .visitor-stats { display: flex; align-items: center; gap: 12px; margin-left: auto; color: var(--muted); font-size: .78rem; }
+    .visitor-stat { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .visitor-stat strong { color: var(--ink); font-weight: 700; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #54df9a; box-shadow: 0 0 10px rgba(84, 223, 154, .75); }
     nav { display: flex; align-items: center; gap: 8px; }
     .menu-button { display: block; width: 48px; height: 42px; padding: 8px; }
     .menu-icon, .menu-icon::before, .menu-icon::after { display: block; height: 3px; border-radius: 2px; background: #fff; content: ""; }
@@ -59,12 +63,13 @@
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
     .section-heading h2 { margin: 0; font: 600 1.7rem "Space Grotesk", sans-serif; }
     .section-heading p { margin: 0; color: var(--muted); }
-    @media (max-width: 640px) { body { padding: 0 16px 40px; } header { padding: 18px 0; } .hero { min-height: 350px; margin-bottom: 32px; padding: 26px; } .hero::after { right: -22%; } .section-heading { display: block; } .section-heading p { margin-top: 6px; } }
+    @media (max-width: 640px) { body { padding: 0 16px 40px; } header { padding: 18px 0; } .visitor-stats { gap: 8px; font-size: .7rem; } .hero { min-height: 350px; margin-bottom: 32px; padding: 26px; } .hero::after { right: -22%; } .section-heading { display: block; } .section-heading p { margin-top: 6px; } }
   </style>
 </head>
 <body>
   <header>
     <h1>Video Platform</h1>
+    <div class="visitor-stats" aria-label="Visitor statistics"><span class="visitor-stat"><span class="live-dot"></span><strong id="live-visitors">0</strong> live</span><span class="visitor-stat"><strong id="total-visitors">0</strong> total</span></div>
     <button id="menu-button" class="menu-button" type="button" aria-label="Open menu" aria-expanded="false"><span class="menu-icon"></span></button>
     <nav id="guest-links"><a href="/register">Register</a><a class="login" href="/login">Login</a><a href="/login">Upload videos</a><a class="login" href="/login">Add video link</a></nav>
     <nav id="user-links" class="profile-actions" hidden><button id="home-button" type="button">Home</button><button id="categories-button" type="button">Categories</button><button id="upload-menu-button" type="button">Upload videos</button><button id="youtube-menu-button" type="button">Add video link</button><button id="profile-button" type="button">Profile</button><button id="logout" type="button">Logout</button></nav>
@@ -152,6 +157,22 @@
     const menuButton = document.querySelector("#menu-button");
     const videoContent = document.querySelector("#video-content");
     const categoryMenu = document.querySelector("#category-menu");
+    const visitorIdKey = "videoPlatformVisitorId";
+    const visitorId = sessionStorage.getItem(visitorIdKey) || crypto.randomUUID();
+    sessionStorage.setItem(visitorIdKey, visitorId);
+    const liveVisitors = document.querySelector("#live-visitors");
+    const totalVisitors = document.querySelector("#total-visitors");
+    async function updateVisitorStats(endpoint) {
+      try {
+        const response = await fetch(`/api/stats/${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ visitorId }) });
+        if (!response.ok) return;
+        const stats = await response.json();
+        liveVisitors.textContent = stats.liveVisitors.toLocaleString();
+        totalVisitors.textContent = stats.totalVisitors.toLocaleString();
+      } catch (error) { }
+    }
+    updateVisitorStats("visit");
+    setInterval(() => updateVisitorStats("heartbeat"), 20000);
     let selectedCategory = "all";
     document.querySelector("#guest-links").hidden = Boolean(token);
     document.querySelector("#user-links").hidden = !token;
