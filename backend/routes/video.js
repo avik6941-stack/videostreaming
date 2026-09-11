@@ -44,6 +44,20 @@ function getYoutubeId(value) {
   }
 }
 
+function getVideoContentType(video) {
+  if (video.mimeType) return video.mimeType;
+  const extension = path.extname(video.filename || "").toLowerCase();
+  const contentTypes = {
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".ogg": "video/ogg",
+    ".ogv": "video/ogg",
+    ".mov": "video/quicktime",
+    ".m4v": "video/mp4"
+  };
+  return contentTypes[extension] || "application/octet-stream";
+}
+
 const categories = ["general", "education", "music", "gaming", "news", "entertainment"];
 
 router.post("/upload", requireAuth, upload.single("video"), async (req, res) => {
@@ -54,6 +68,7 @@ router.post("/upload", requireAuth, upload.single("video"), async (req, res) => 
   const video = new Video({
     title: req.body.title || req.file.originalname,
     filename: req.file.filename,
+    mimeType: req.file.mimetype,
     category: categories.includes(req.body.category) ? req.body.category : "general"
   });
 
@@ -137,7 +152,8 @@ router.get("/:id/stream", async (req, res) => {
   if (!range) {
     res.writeHead(200, {
       "Content-Length": fileSize,
-      "Content-Type": "video/mp4"
+      "Content-Type": getVideoContentType(video),
+      "Accept-Ranges": "bytes"
     });
     return fs.createReadStream(filePath).pipe(res);
   }
@@ -156,7 +172,7 @@ router.get("/:id/stream", async (req, res) => {
     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
     "Accept-Ranges": "bytes",
     "Content-Length": chunkSize,
-    "Content-Type": "video/mp4"
+    "Content-Type": getVideoContentType(video)
   });
 
   return fs.createReadStream(filePath, { start, end }).pipe(res);
