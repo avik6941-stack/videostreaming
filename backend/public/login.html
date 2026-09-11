@@ -9,7 +9,19 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { color-scheme: dark; font-family: "DM Sans", sans-serif; --muted: #9ca5b5; --line: #28303c; --accent: #ff4d6d; --accent-2: #ff8a5b; }
-    body { max-width: 520px; min-height: 100vh; margin: 0 auto; padding: 16vh 20px 48px; background: radial-gradient(circle at 10% 0%, #242238 0, transparent 32%), #0b0e13; color: #f7f8fa; }
+    body { max-width: 520px; min-height: 100vh; margin: 0 auto; padding: 0 20px 48px; background: radial-gradient(circle at 10% 0%, #242238 0, transparent 32%), #0b0e13; color: #f7f8fa; }
+    .site-header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 22px 0; background: rgba(11, 14, 19, .86); backdrop-filter: blur(18px); }
+    .brand { color: #f7f8fa; font: 700 1.2rem "Space Grotesk", sans-serif; text-decoration: none; letter-spacing: -.04em; }
+    .brand::before { display: inline-block; width: 10px; height: 10px; margin: 0 8px 1px 0; border-radius: 50%; background: var(--accent); content: ""; box-shadow: 0 0 18px rgba(255, 77, 109, .7); }
+    .menu-button { width: 44px; height: 40px; padding: 8px; border: 1px solid #3a4352; border-radius: 8px; background: #151a23; }
+    .menu-icon, .menu-icon::before, .menu-icon::after { display: block; height: 2px; border-radius: 2px; background: #fff; content: ""; }
+    .menu-icon::before { transform: translateY(-7px); }
+    .menu-icon::after { transform: translateY(5px); }
+    .auth-nav { position: absolute; top: 70px; right: 0; display: none; flex-direction: column; min-width: 150px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: #171d27; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+    .auth-nav.open { display: flex; }
+    .auth-nav a { padding: 10px 12px; border-radius: 7px; text-decoration: none; }
+    .auth-nav a:hover { background: #252e3d; }
+    main { padding-top: 16vh; }
     h1 { margin-bottom: 8px; font: 700 2.5rem "Space Grotesk", sans-serif; letter-spacing: -.06em; }
     h1::before { display: inline-block; width: 12px; height: 12px; margin: 0 10px 3px 0; border-radius: 50%; background: var(--accent); content: ""; box-shadow: 0 0 18px rgba(255, 77, 109, .7); }
     body > p { color: var(--muted); }
@@ -24,8 +36,14 @@
   </style>
 </head>
 <body>
-  <h1>Login</h1>
-  <p>Login with your email and password.</p>
+  <header class="site-header">
+    <a class="brand" href="/">Video Platform</a>
+    <button id="menu-button" class="menu-button" type="button" aria-label="Open menu" aria-expanded="false"><span class="menu-icon"></span></button>
+    <nav id="auth-nav" class="auth-nav" aria-label="Main navigation"><a href="/">Home</a><a href="/login">Login</a><a href="/register">Register</a></nav>
+  </header>
+  <main>
+    <h1>Login</h1>
+    <p>Login with your email and password.</p>
   <form id="login-form">
     <label for="email">Email</label>
     <input id="email" name="email" type="email" required>
@@ -34,8 +52,15 @@
     <button type="submit">Login</button>
     <div id="status" role="status"></div>
   </form>
-  <p>New user? <a href="/register">Create an account</a></p>
+    <p>New user? <a href="/register">Create an account</a></p>
+  </main>
   <script>
+    const menuButton = document.querySelector("#menu-button");
+    const authNav = document.querySelector("#auth-nav");
+    menuButton.addEventListener("click", () => {
+      const open = authNav.classList.toggle("open");
+      menuButton.setAttribute("aria-expanded", String(open));
+    });
     const form = document.querySelector("#login-form");
     const status = document.querySelector("#status");
     if (new URLSearchParams(window.location.search).get("registered") === "1") {
