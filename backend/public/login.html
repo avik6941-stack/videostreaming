@@ -4,17 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login | Video Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
-    body { max-width: 480px; margin: 0 auto; padding: 48px 20px; background: #101217; color: #f3f4f6; }
-    form { padding: 24px; border: 1px solid #30343d; border-radius: 10px; background: #181b22; }
-    label { display: block; margin: 14px 0 6px; color: #b9c0cc; }
-    input, button { box-sizing: border-box; width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #454b57; font: inherit; }
-    input { background: #111318; color: #fff; }
-    button { margin-top: 20px; border: 0; background: #36a269; color: #fff; cursor: pointer; font-weight: 700; }
+    :root { color-scheme: dark; font-family: "DM Sans", sans-serif; --muted: #9ca5b5; --line: #28303c; --accent: #ff4d6d; --accent-2: #ff8a5b; }
+    body { max-width: 520px; min-height: 100vh; margin: 0 auto; padding: 16vh 20px 48px; background: radial-gradient(circle at 10% 0%, #242238 0, transparent 32%), #0b0e13; color: #f7f8fa; }
+    h1 { margin-bottom: 8px; font: 700 2.5rem "Space Grotesk", sans-serif; letter-spacing: -.06em; }
+    h1::before { display: inline-block; width: 12px; height: 12px; margin: 0 10px 3px 0; border-radius: 50%; background: var(--accent); content: ""; box-shadow: 0 0 18px rgba(255, 77, 109, .7); }
+    body > p { color: var(--muted); }
+    form { margin-top: 28px; padding: 28px; border: 1px solid var(--line); border-radius: 16px; background: #151a23; box-shadow: 0 24px 70px rgba(0,0,0,.2); }
+    label { display: block; margin: 14px 0 6px; color: var(--muted); }
+    input, button { box-sizing: border-box; width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #3a4352; font: inherit; }
+    input { background: #0e1219; color: #fff; }
+    button { margin-top: 20px; border: 0; background: linear-gradient(100deg, var(--accent), var(--accent-2)); color: #fff; cursor: pointer; font-weight: 700; }
     #status { min-height: 24px; margin-top: 16px; color: #a8e6c2; }
     .error { color: #ff9d9d !important; }
-    a { color: #8ed7ff; }
+    a { color: #ff9aae; }
   </style>
 </head>
 <body>
