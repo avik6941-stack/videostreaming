@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watch | Video Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; font-family: "DM Sans", sans-serif; --ink: #f7f8fa; --muted: #9ca5b5; --line: #28303c; --panel: #151a23; --accent: #ff4d6d; --accent-2: #ff8a5b; }
+    * { box-sizing: border-box; }
+    body { max-width: 1240px; min-height: 100vh; margin: 0 auto; padding: 0 32px 64px; background: radial-gradient(circle at 10% 0%, #242238 0, transparent 32%), #0b0e13; color: var(--ink); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
+    .brand { color: var(--ink); font: 700 1.35rem "Space Grotesk", sans-serif; text-decoration: none; }
+    .brand::before { display: inline-block; width: 10px; height: 10px; margin: 0 9px 2px 0; border-radius: 50%; background: var(--accent); content: ""; box-shadow: 0 0 18px rgba(255, 77, 109, .7); }
+    .back-link { color: #fff; text-decoration: none; }
+    main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; }
+    .player-shell, .related { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+    .player-shell { min-width: 0; }
+    video, iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 10px; background: #000; }
+    .eyebrow { margin: 0 0 10px; color: #ff8ea2; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    h1, h2 { font-family: "Space Grotesk", sans-serif; }
+    h1 { margin: 18px 0 8px; font-size: clamp(1.6rem, 4vw, 2.6rem); line-height: 1.05; }
+    h2 { margin: 0 0 16px; font-size: 1.25rem; }
+    .details { color: var(--muted); text-transform: capitalize; }
+    .description { margin-top: 18px; color: #c6cbd5; }
+    .related-list { display: grid; gap: 12px; }
+    .related-card { display: block; padding: 12px; border: 1px solid var(--line); border-radius: 10px; color: inherit; text-decoration: none; background: #1b222e; }
+    .related-card:hover { border-color: #596579; }
+    .related-card strong { display: block; margin-bottom: 5px; font-family: "Space Grotesk", sans-serif; }
+    .related-card span { color: var(--muted); font-size: .78rem; }
+    .error { padding: 48px 0; color: #ff9d9d; }
+    @media (max-width: 800px) { body { padding: 0 16px 40px; } main { grid-template-columns: 1fr; } .related { order: 2; } header { padding: 18px 0; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">Video Platform</a>
+    <a class="back-link" href="/">Back to library</a>
+  </header>
+  <main>
+    <section class="player-shell">
+      <div id="player">Loading video...</div>
+      <div id="video-info"></div>
+    </section>
+    <aside class="related">
+      <h2>More to watch</h2>
+      <div id="related-list" class="related-list">Loading...</div>
+    </aside>
+  </main>
+  <script>
+    const player = document.querySelector("#player");
+    const videoInfo = document.querySelector("#video-info");
+    const relatedList = document.querySelector("#related-list");
+    const videoId = new URLSearchParams(window.location.search).get("id");
+    function youtubeId(value) {
+      try {
+        const url = new URL(value);
+        const host = url.hostname.replace("www.", "");
+        if (host === "youtu.be") return url.pathname.slice(1).split("/")[0];
+        if (host !== "youtube.com" && host !== "m.youtube.com") return null;
+        if (url.pathname === "/watch") return url.searchParams.get("v");
+        if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/embed/")) return url.pathname.split("/")[2];
+      } catch (error) { return null; }
+      return null;
+    }
+    function renderInfo(video) {
+      const title = document.createElement("h1");
+      title.textContent = video.title;
+      const details = document.createElement("div");
+      details.className = "details";
+      details.textContent = `${video.category || "general"} | ${Number(video.views || 0).toLocaleString()} views | Uploaded ${new Date(video.uploadDate).toLocaleDateString()}`;
+      videoInfo.replaceChildren(title, details);
+    }
+    function renderPlayer(video) {
+      const source = video.videoUrl || video.youtubeUrl;
+      const id = source && youtubeId(source);
+      if (id) {
+        const frame = document.createElement("iframe");
+        frame.src = `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0`;
+        frame.title = video.title;
+        frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        frame.allowFullscreen = true;
+        player.replaceChildren(frame);
+        return;
+      }
+      const media = document.createElement("video");
+      media.controls = true;
+      media.playsInline = true;
+      media.src = video.filename ? `/api/videos/${video._id}/stream` : source;
+      player.replaceChildren(media);
+    }
+    async function loadPage() {
+      if (!videoId) throw new Error("No video was selected.");
+      const response = await fetch(`/api/videos/${encodeURIComponent(videoId)}`);
+      const video = await response.json();
+      if (!response.ok) throw new Error(video.error || "Video not found");
+      renderPlayer(video);
+      renderInfo(video);
+      const relatedResponse = await fetch("/api/videos");
+      const related = await relatedResponse.json();
+      relatedList.replaceChildren();
+      related.filter((item) => item._id !== video._id).slice(0, 5).forEach((item) => {
+        const link = document.createElement("a");
+        link.className = "related-card";
+        link.href = `/watch?id=${encodeURIComponent(item._id)}`;
+        const title = document.createElement("strong");
+        title.textContent = item.title;
+        const meta = document.createElement("span");
+        meta.textContent = `${item.category || "general"} | ${Number(item.views || 0).toLocaleString()} views`;
+        link.append(title, meta);
+        relatedList.append(link);
+      });
+      if (!relatedList.children.length) relatedList.textContent = "No other videos yet.";
+    }
+    loadPage().catch((error) => {
+      player.className = "error";
+      player.textContent = error.message;
+      relatedList.textContent = "";
+    });
+  </script>
+</body>
+</html>

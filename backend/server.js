@@ -42,6 +42,10 @@ app.get("/home", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "home.html"));
 });
 
+app.get("/watch", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "watch.html"));
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((error, req, res, next) => {

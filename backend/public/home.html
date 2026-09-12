@@ -63,6 +63,11 @@
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
     .section-heading h2 { margin: 0; font: 600 1.7rem "Space Grotesk", sans-serif; }
     .section-heading p { margin: 0; color: var(--muted); }
+    .catalog-tools { display: flex; gap: 12px; margin-bottom: 18px; }
+    .catalog-tools input { flex: 1; }
+    .watch-link { display: block; color: inherit; text-decoration: none; }
+    .watch-link:hover h2 { color: #ff9aae; }
+    .card-meta { display: flex; justify-content: space-between; gap: 8px; margin: 10px 4px 0; color: var(--muted); font-size: .76rem; }
     @media (max-width: 640px) { body { padding: 0 16px 40px; } header { padding: 18px 0; } .visitor-stats { gap: 8px; font-size: .7rem; } .hero { min-height: 350px; margin-bottom: 32px; padding: 26px; } .hero::after { right: -22%; } .section-heading { display: block; } .section-heading p { margin-top: 6px; } }
   </style>
 </head>
@@ -146,7 +151,7 @@
     <button id="youtube-button" type="submit">Add video link</button>
     <div id="youtube-status" role="status"></div>
   </form>
-  <section id="video-content"><div class="section-heading"><div><p class="eyebrow">Fresh from the community</p><h2>All uploaded videos</h2></div><p>Curated for your next session</p></div><div id="videos">Loading...</div></section>
+  <section id="video-content"><div class="section-heading"><div><p class="eyebrow">Fresh from the community</p><h2>All uploaded videos</h2></div><p>Curated for your next session</p></div><div class="catalog-tools"><input id="video-search" type="search" placeholder="Search videos" aria-label="Search videos"></div><div id="videos">Loading...</div></section>
   <script>
     const tokenKey = "videoPlatformToken";
     const token = localStorage.getItem(tokenKey);
@@ -210,6 +215,8 @@
     const youtubeStatus = document.querySelector("#youtube-status");
     const profileStatus = document.querySelector("#profile-status");
     const videos = document.querySelector("#videos");
+    const videoSearch = document.querySelector("#video-search");
+    let allVideos = [];
     function showHomeSections(show) {
       uploadForm.hidden = !show || !token;
       videoContent.hidden = !show;
@@ -225,37 +232,50 @@
     }
     async function loadVideos() {
       const response = await fetch("/api/videos");
-      const items = await response.json();
+      allVideos = await response.json();
+      renderVideos();
+    }
+    function renderVideos() {
       videos.replaceChildren();
-      const filteredItems = selectedCategory === "all" ? items : items.filter((item) => (item.category || "general") === selectedCategory);
+      const query = videoSearch.value.trim().toLowerCase();
+      const filteredItems = allVideos.filter((item) => {
+        const matchesCategory = selectedCategory === "all" || (item.category || "general") === selectedCategory;
+        return matchesCategory && (!query || item.title.toLowerCase().includes(query));
+      });
       if (!filteredItems.length) { videos.textContent = "No videos in this category."; return; }
       filteredItems.forEach((item) => {
         const article = document.createElement("article");
+        const watchLink = document.createElement("a");
+        watchLink.className = "watch-link";
+        watchLink.href = `/watch?id=${encodeURIComponent(item._id)}`;
         const heading = document.createElement("h2");
         heading.textContent = item.title;
         const details = document.createElement("div");
         details.className = "details";
         details.textContent = `${item.category || "general"} | Uploaded ${new Date(item.uploadDate).toLocaleString()}`;
         if (item.videoUrl || item.youtubeUrl) {
-          const player = document.createElement("a");
+          const player = document.createElement("div");
           const originalUrl = item.videoUrl || item.youtubeUrl;
           const id = youtubeId(originalUrl);
           player.className = "youtube-link";
-          player.href = originalUrl;
-          player.target = "_blank";
-          player.rel = "noopener noreferrer";
           if (id) player.style.backgroundImage = `url(https://img.youtube.com/vi/${id}/hqdefault.jpg)`;
-          player.innerHTML = `<span>${id ? "Play on YouTube" : "Open video link"}</span>`;
-          article.append(heading, details, player);
+          player.innerHTML = `<span>${id ? "Play video" : "Open video"}</span>`;
+          watchLink.append(player);
         } else {
-          const player = document.createElement("video");
-          player.controls = true;
-          player.src = `/api/videos/${item._id}/stream`;
-          article.append(heading, details, player);
+          const preview = document.createElement("div");
+          preview.className = "youtube-link";
+          preview.innerHTML = "<span>Watch video</span>";
+          watchLink.append(preview);
         }
+        const cardMeta = document.createElement("div");
+        cardMeta.className = "card-meta";
+        cardMeta.innerHTML = `<span>${Number(item.views || 0).toLocaleString()} views</span><span>Open watch page</span>`;
+        watchLink.append(heading, details, cardMeta);
+        article.append(watchLink);
         videos.append(article);
       });
     }
+    videoSearch.addEventListener("input", renderVideos);
     uploadForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const button = document.querySelector("#upload-button");

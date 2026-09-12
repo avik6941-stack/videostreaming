@@ -129,6 +129,16 @@ router.get("/", async (req, res) => {
   return res.json(videos);
 });
 
+router.get("/:id", async (req, res, next) => {
+  try {
+    const video = await Video.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
+    if (!video) return res.status(404).json({ error: "Video not found" });
+    return res.json(video);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get("/:id/stream", async (req, res) => {
   const video = await Video.findById(req.params.id);
 
