@@ -159,11 +159,19 @@ router.get("/:id/stream", async (req, res) => {
   const fileSize = fs.statSync(filePath).size;
   const range = req.headers.range;
 
+  // Set CORS headers for video streaming
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Range, Content-Type");
+  res.header("Access-Control-Expose-Headers", "Content-Length, Content-Range, Content-Type");
+
   if (!range) {
     res.writeHead(200, {
       "Content-Length": fileSize,
       "Content-Type": getVideoContentType(video),
-      "Accept-Ranges": "bytes"
+      "Accept-Ranges": "bytes",
+      "Content-Disposition": `inline; filename="${video.filename}"`,
+      "Cache-Control": "public, max-age=3600"
     });
     return fs.createReadStream(filePath).pipe(res);
   }
@@ -182,7 +190,9 @@ router.get("/:id/stream", async (req, res) => {
     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
     "Accept-Ranges": "bytes",
     "Content-Length": chunkSize,
-    "Content-Type": getVideoContentType(video)
+    "Content-Type": getVideoContentType(video),
+    "Content-Disposition": `inline; filename="${video.filename}"`,
+    "Cache-Control": "public, max-age=3600"
   });
 
   return fs.createReadStream(filePath, { start, end }).pipe(res);
