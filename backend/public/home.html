@@ -36,6 +36,10 @@
     button { margin-top: 18px; border: 0; background: linear-gradient(100deg, var(--accent), var(--accent-2)); color: #fff; cursor: pointer; font-weight: 700; }
     header button { width: auto; margin: 0; background: var(--panel-soft); }
     .profile-actions { display: flex; gap: 8px; }
+    .form-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .form-heading h2 { margin: 0; }
+    .close-button { width: 34px; height: 34px; margin: 0; padding: 0; border: 1px solid #3a4352; background: transparent; color: var(--muted); font-size: 1.5rem; line-height: 1; }
+    .close-button:hover { border-color: var(--accent); color: var(--ink); }
     #profile-form { position: fixed; z-index: 10; top: 50%; left: 50%; width: min(420px, calc(100% - 40px)); max-height: calc(100vh - 40px); box-sizing: border-box; margin: 0; overflow-y: auto; transform: translate(-50%, calc(-50% - 16px)); opacity: 0; visibility: hidden; transition: transform .25s ease, opacity .25s ease, visibility .25s ease; }
     #profile-form.open { transform: translate(-50%, -50%); opacity: 1; visibility: visible; }
     header { position: sticky; }
@@ -126,7 +130,7 @@
     <div id="profile-status" role="status"></div>
   </form>
   <form id="upload-form" hidden>
-    <h2>Upload video</h2>
+    <div class="form-heading"><h2>Upload video</h2><button class="close-button" id="close-upload-button" type="button" aria-label="Close upload form">&times;</button></div>
     <label for="title">Title</label>
     <input id="title" name="title" placeholder="My video" required>
     <label for="video">Video file</label>
@@ -139,7 +143,7 @@
     <div id="status" role="status"></div>
   </form>
   <form id="youtube-form" hidden>
-    <h2>Add video link</h2>
+    <div class="form-heading"><h2>Add video link</h2><button class="close-button" id="close-youtube-button" type="button" aria-label="Close video link form">&times;</button></div>
     <label for="youtube-title">Video name</label>
     <input id="youtube-title" name="title" placeholder="Video name" required>
     <label for="youtube-url">Video link</label>
@@ -220,6 +224,13 @@
     function showHomeSections(show) {
       uploadForm.hidden = !show || !token;
       videoContent.hidden = !show;
+    }
+    function closeMediaForms() {
+      uploadForm.hidden = true;
+      youtubeForm.hidden = true;
+      showHomeSections(true);
+      document.querySelector("#user-links").classList.remove("menu-open");
+      menuButton.setAttribute("aria-expanded", "false");
     }
     function youtubeId(value) {
       try {
@@ -319,6 +330,8 @@
       } catch (error) { youtubeStatus.className = "error"; youtubeStatus.textContent = error.message; }
       finally { button.disabled = false; }
     });
+    document.querySelector("#close-upload-button").addEventListener("click", closeMediaForms);
+    document.querySelector("#close-youtube-button").addEventListener("click", closeMediaForms);
     document.querySelector("#logout").addEventListener("click", () => { localStorage.removeItem(tokenKey); localStorage.removeItem("videoPlatformUser"); window.location.href = "/"; });
     document.querySelector("#profile-button").addEventListener("click", (event) => {
       const showingProfile = !profileForm.classList.contains("open");
