@@ -2,13 +2,16 @@ const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const ffmpeg = require("fluent-ffmpeg");
 const Video = require("../models/videos");
 const requireAuth = require("../middleware/auth");
 
 const router = express.Router();
 const uploadDirectory = path.join(__dirname, "..", "uploads");
+const thumbnailDirectory = path.join(__dirname, "..", "uploads", "thumbnails");
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
+fs.mkdirSync(thumbnailDirectory, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: uploadDirectory,
@@ -58,6 +61,20 @@ function getVideoContentType(video) {
   return contentTypes[extension] || "application/octet-stream";
 }
 
+function generateThumbnail(videoPath, thumbnailPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      .screenshots({
+        timestamps: ["1%"],
+        filename: path.basename(thumbnailPath),
+        folder: path.dirname(thumbnailPath),
+        size: "320x180"
+      })
+      .on("end", () => resolve())
+      .on("error", (err) => reject(err));
+  });
+}
+
 const categories = ["general", "education", "music", "gaming", "news", "entertainment"];
 
 router.post("/upload", requireAuth, upload.single("video"), async (req, res) => {
@@ -65,9 +82,21 @@ router.post("/upload", requireAuth, upload.single("video"), async (req, res) => 
     return res.status(400).json({ error: "A video file is required" });
   }
 
+  const thumbnailFilename = `thumb-${Date.now()}.png`;
+  const thumbnailPath = path.join(thumbnailDirectory, thumbnailFilename);
+
+  try {
+    // Generate thumbnail from first 1% of video
+    await generateThumbnail(req.file.path, thumbnailPath);
+  } catch (error) {
+    console.error("Thumbnail generation failed:", error.message);
+    // Continue anyway, thumbnail is optional
+  }
+
   const video = new Video({
     title: req.body.title || req.file.originalname,
     filename: req.file.filename,
+    thumbnail: fs.existsSync(thumbnailPath) ? thumbnailFilename : null,
     mimeType: req.file.mimetype,
     category: categories.includes(req.body.category) ? req.body.category : "general"
   });
@@ -76,6 +105,7 @@ router.post("/upload", requireAuth, upload.single("video"), async (req, res) => 
     await video.save();
   } catch (error) {
     fs.unlinkSync(req.file.path);
+    if (fs.existsSync(thumbnailPath)) fs.unlinkSync(thumbnailPath);
     throw error;
   }
 
@@ -136,6 +166,26 @@ router.get("/:id", async (req, res, next) => {
     return res.json(video);
   } catch (error) {
     return next(error);
+  }
+});
+
+router.get("/:id/thumbnail", async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video || !video.thumbnail) {
+      return res.status(404).json({ error: "Thumbnail not found" });
+    }
+
+    const thumbnailPath = path.join(thumbnailDirectory, video.thumbnail);
+    if (!fs.existsSync(thumbnailPath)) {
+      return res.status(404).json({ error: "Thumbnail file not found" });
+    }
+
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Cache-Control", "public, max-age=86400");
+    return res.sendFile(thumbnailPath);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to retrieve thumbnail" });
   }
 });
 
