@@ -163,7 +163,9 @@ router.get("/:id/stream", async (req, res) => {
     res.writeHead(200, {
       "Content-Length": fileSize,
       "Content-Type": getVideoContentType(video),
-      "Accept-Ranges": "bytes"
+      "Accept-Ranges": "bytes",
+      "Access-Control-Allow-Origin": "*",
+      "Content-Disposition": `inline; filename="${video.filename}"`
     });
     return fs.createReadStream(filePath).pipe(res);
   }
@@ -182,7 +184,9 @@ router.get("/:id/stream", async (req, res) => {
     "Content-Range": `bytes ${start}-${end}/${fileSize}`,
     "Accept-Ranges": "bytes",
     "Content-Length": chunkSize,
-    "Content-Type": getVideoContentType(video)
+    "Content-Type": getVideoContentType(video),
+    "Access-Control-Allow-Origin": "*",
+    "Content-Disposition": `inline; filename="${video.filename}"`
   });
 
   return fs.createReadStream(filePath, { start, end }).pipe(res);
